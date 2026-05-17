@@ -31,51 +31,64 @@ export default function QuizCard({ question, questionNumber, total, onNext }: Pr
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      {/* Progress bar */}
-      <div className="mb-6">
-        <div className="flex justify-between text-sm text-gray-500 mb-1">
-          <span>Question {questionNumber} of {total}</span>
-          <span>{Math.round((questionNumber / total) * 100)}%</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-3">
+      {/* Progress dots */}
+      <div className="flex justify-center gap-2 mb-6">
+        {Array.from({ length: total }).map((_, i) => (
           <div
-            className="bg-indigo-500 h-3 rounded-full transition-all duration-500"
-            style={{ width: `${(questionNumber / total) * 100}%` }}
+            key={i}
+            className={`h-3 rounded-full transition-all duration-300 ${
+              i < questionNumber - 1
+                ? "w-8 bg-indigo-500"
+                : i === questionNumber - 1
+                ? "w-8 bg-indigo-400 animate-pulse"
+                : "w-3 bg-gray-200"
+            }`}
           />
-        </div>
+        ))}
       </div>
 
-      {/* Question */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
-        <p className="text-lg font-semibold text-gray-800 leading-relaxed">
+      {/* Question card */}
+      <div className="bg-white rounded-3xl shadow-lg p-6 mb-5 text-center">
+        <div className="text-6xl mb-4 animate-float inline-block">{question.emoji}</div>
+        <p className="text-xl font-bold text-gray-800 leading-snug">
           {question.question}
         </p>
       </div>
 
       {/* Options */}
-      <div className="grid gap-3 mb-4">
+      <div className="grid grid-cols-2 gap-3 mb-4">
         {question.options.map((option, idx) => {
-          let style =
-            "w-full text-left px-5 py-4 rounded-xl border-2 font-medium transition-all duration-200 text-gray-700 ";
+          const isAnswer = idx === question.answer;
+          const isChosen = idx === selected;
+
+          let base =
+            "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-3 font-semibold text-sm transition-all duration-200 min-h-[90px] ";
 
           if (!revealed) {
-            style += "border-gray-200 bg-white hover:border-indigo-400 hover:bg-indigo-50 cursor-pointer";
-          } else if (idx === question.answer) {
-            style += "border-green-500 bg-green-50 text-green-800";
-          } else if (idx === selected) {
-            style += "border-red-400 bg-red-50 text-red-700";
+            base += "border-gray-200 bg-white hover:border-indigo-400 hover:bg-indigo-50 hover:scale-105 cursor-pointer active:scale-95";
+          } else if (isAnswer) {
+            base += "border-green-400 bg-green-50 animate-bounce-in";
+          } else if (isChosen) {
+            base += "border-red-300 bg-red-50 animate-shake";
           } else {
-            style += "border-gray-200 bg-gray-50 opacity-60";
+            base += "border-gray-100 bg-gray-50 opacity-40";
           }
 
           return (
-            <button key={idx} className={style} onClick={() => handleSelect(idx)}>
-              <span className="inline-block w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 text-sm font-bold mr-3 text-center leading-7">
-                {String.fromCharCode(65 + idx)}
+            <button key={idx} className={base} onClick={() => handleSelect(idx)}>
+              <span className="text-3xl">{option.emoji}</span>
+              <span className={`text-center leading-tight ${
+                isAnswer && revealed ? "text-green-700" :
+                isChosen && revealed ? "text-red-600" : "text-gray-700"
+              }`}>
+                {option.label}
               </span>
-              {option}
-              {revealed && idx === question.answer && " ✓"}
-              {revealed && idx === selected && idx !== question.answer && " ✗"}
+              {revealed && isAnswer && (
+                <span className="text-green-500 font-black text-lg">✓</span>
+              )}
+              {revealed && isChosen && !isAnswer && (
+                <span className="text-red-400 font-black text-lg">✗</span>
+              )}
             </button>
           );
         })}
@@ -84,23 +97,25 @@ export default function QuizCard({ question, questionNumber, total, onNext }: Pr
       {/* Explanation */}
       {revealed && (
         <div
-          className={`rounded-xl p-4 mb-4 text-sm leading-relaxed ${
+          className={`rounded-2xl p-4 mb-4 text-center animate-bounce-in ${
             isCorrect
-              ? "bg-green-50 border border-green-200 text-green-800"
-              : "bg-orange-50 border border-orange-200 text-orange-800"
+              ? "bg-green-50 border-2 border-green-200"
+              : "bg-orange-50 border-2 border-orange-200"
           }`}
         >
-          <span className="font-bold text-base">{isCorrect ? "🎉 Correct!" : "💡 Not quite!"} </span>
-          {question.explanation}
+          <div className="text-3xl mb-1">{isCorrect ? "🎉" : "💡"}</div>
+          <p className={`font-semibold text-sm ${isCorrect ? "text-green-700" : "text-orange-700"}`}>
+            {question.explanation}
+          </p>
         </div>
       )}
 
       {revealed && (
         <button
           onClick={handleNext}
-          className="w-full py-4 rounded-xl bg-indigo-600 text-white font-bold text-lg hover:bg-indigo-700 transition-colors shadow-md"
+          className="w-full py-4 rounded-2xl bg-indigo-600 text-white font-extrabold text-lg hover:bg-indigo-700 active:scale-95 transition-all shadow-lg animate-bounce-in"
         >
-          {questionNumber === total ? "See My Results 🏆" : "Next Question →"}
+          {questionNumber === total ? "See My Score! 🏆" : "Next →"}
         </button>
       )}
     </div>
